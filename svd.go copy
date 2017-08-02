@@ -307,81 +307,81 @@ func main() {
 		value := encBuf.Bytes()
 		err = ioutil.WriteFile("TermDocsTemp.txt", value, 0644)
 
-		// buf := new(bytes.Buffer)
-		// var pi float64 = math.Pi
-		// err = binary.Write(buf, binary.LittleEndian, pi)
-		// if err != nil {
-		// 	fmt.Println("binary.Write failed:", err)
-		// }
+		buf := new(bytes.Buffer)
+		var pi float64 = math.Pi
+		err = binary.Write(buf, binary.LittleEndian, pi)
+		if err != nil {
+			fmt.Println("binary.Write failed:", err)
+		}
 
-		// fmt.Printf("% x\n", value)
+		fmt.Printf("% x\n", value)
 
-		//READ TERME & DOCE
-		// raw, err := ioutil.ReadFile("TermDocs.txt")
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// 	os.Exit(1)
-		// }
-		// var matr MatrixE
-		// json.Unmarshal(raw, &matr)
+		READ TERME & DOCE
+		raw, err := ioutil.ReadFile("TermDocs.txt")
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		var matr MatrixE
+		json.Unmarshal(raw, &matr)
 
-		//---------Unpack GOB data-----------------
-		// raw, err := ioutil.ReadFile("TermDocs.txt")
-		// decBuf := bytes.NewBuffer(raw)
-		// bookOut := MatrixE{}
-		// err = gob.NewDecoder(decBuf).Decode(&bookOut)
+		---------Unpack GOB data-----------------
+		raw, err := ioutil.ReadFile("TermDocs.txt")
+		decBuf := bytes.NewBuffer(raw)
+		bookOut := MatrixE{}
+		err = gob.NewDecoder(decBuf).Decode(&bookOut)
 
-		// fmt.Println("TERMS", bookOut.Terms)
-		// fmt.Println("DOCS", bookOut.Docs)
+		fmt.Println("TERMS", bookOut.Terms)
+		fmt.Println("DOCS", bookOut.Docs)
 
-		// TermRows := len(bookOut.Terms)
-		// TermCols := len(bookOut.Terms[0])
-		// DocRows := len(bookOut.Docs)
-		// DocCols := len(bookOut.Docs[0])
-		// TermDense := mat64.NewDense(TermRows, TermCols, nil)
-		// for i := 0; i < TermRows; i++ {
-		// 	for j := 0; j < TermCols; j++ {
-		// 		TermDense.Set(i, j, bookOut.Terms[i][j])
-		// 	}
-		// }
-		// DocDense := mat64.NewDense(DocRows, DocCols, nil)
-		// for i := 0; i < DocRows; i++ {
-		// 	for j := 0; j < DocCols; j++ {
-		// 		DocDense.Set(i, j, bookOut.Docs[i][j])
-		// 	}
-		// }
+		TermRows := len(bookOut.Terms)
+		TermCols := len(bookOut.Terms[0])
+		DocRows := len(bookOut.Docs)
+		DocCols := len(bookOut.Docs[0])
+		TermDense := mat64.NewDense(TermRows, TermCols, nil)
+		for i := 0; i < TermRows; i++ {
+			for j := 0; j < TermCols; j++ {
+				TermDense.Set(i, j, bookOut.Terms[i][j])
+			}
+		}
+		DocDense := mat64.NewDense(DocRows, DocCols, nil)
+		for i := 0; i < DocRows; i++ {
+			for j := 0; j < DocCols; j++ {
+				DocDense.Set(i, j, bookOut.Docs[i][j])
+			}
+		}
 
-		// //--------------------scaling done-----------------------------------------------//
-		// raw, err = ioutil.ReadFile("Query.txt")
-		// fmt.Println(string(raw))
+		//--------------------scaling done-----------------------------------------------//
+		raw, err = ioutil.ReadFile("Query.txt")
+		fmt.Println(string(raw))
 
-		// query := string(raw)
-		// queryfields := strings.Fields(query)
-		// _, c = TermDense.Dims()
-		// qa := mat64.NewVector(c, nil) // add all query vectors in qa
-		// q := mat64.NewVector(c, nil)  // q will hold scaled qa
-		// for _, v := range queryfields {
-		// 	stemmedqueryfield := porterstemmer.StemString(strings.ToLower(v))
-		// 	queryfieldvector := TermDense.RowView(phrases[stemmedqueryfield].wordID)
-		// 	qa.AddVec(queryfieldvector, qa)
-		// }
-		// q.ScaleVec(float64(1)/float64(len(queryfields)), qa)
-		// //---------------------Measure cosine similarity with all the doc vectors------------//
-		// _, c = DocDense.Dims()
-		// for i := 0; i < c; i++ {
-		// 	d := DocDense.ColView(i)
-		// 	csm := cosinesimilarity(d, q, docID[i])
-		// 	similarities = append(similarities, csm)
-		// }
-		// sort.Sort(Bysimilarity(similarities))
-		// //------------printing the result----------------------------//
-		// count = 0
-		// for _, v := range similarities {
-		// 	if count < 10 {	
-		// 		fmt.Println(v.dname, v.simlarity)
-		// 	}
-		// 	count = count + 1
-		// }
+		query := string(raw)
+		queryfields := strings.Fields(query)
+		_, c = TermDense.Dims()
+		qa := mat64.NewVector(c, nil) // add all query vectors in qa
+		q := mat64.NewVector(c, nil)  // q will hold scaled qa
+		for _, v := range queryfields {
+			stemmedqueryfield := porterstemmer.StemString(strings.ToLower(v))
+			queryfieldvector := TermDense.RowView(phrases[stemmedqueryfield].wordID)
+			qa.AddVec(queryfieldvector, qa)
+		}
+		q.ScaleVec(float64(1)/float64(len(queryfields)), qa)
+		//---------------------Measure cosine similarity with all the doc vectors------------//
+		_, c = DocDense.Dims()
+		for i := 0; i < c; i++ {
+			d := DocDense.ColView(i)
+			csm := cosinesimilarity(d, q, docID[i])
+			similarities = append(similarities, csm)
+		}
+		sort.Sort(Bysimilarity(similarities))
+		//------------printing the result----------------------------//
+		count = 0
+		for _, v := range similarities {
+			if count < 10 {	
+				fmt.Println(v.dname, v.simlarity)
+			}
+			count = count + 1
+		}
 
 		//===========================================================
 		printMatrix(DocE, mapOfMaps, fileNames)
