@@ -1,0 +1,55 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"strconv"
+)
+
+func runPython(threshold float64, dimensions uint64, inputFile string){
+	f, _ := os.Create("ClusterScript.sh")
+	f.WriteString("#!/bin/sh\n\n")
+	f.WriteString("python cluster.py ")
+	f.WriteString(strconv.FormatFloat(threshold, 'f', -1, 64))
+	f.WriteString(" ")
+	f.WriteString(strconv.FormatUint(dimensions,10))
+	f.WriteString(" ")
+	f.WriteString(inputFile)
+
+	app := "/Users/varuncherukuri/Documents/College/Summer3/Clustering/ClusterScript.sh"
+	println("Running Python Script ...")
+	cmd := exec.Command(app)
+	stdout,err := cmd.CombinedOutput()
+	if err != nil {
+		println("ERROR", err.Error())
+	} else {
+		println("Ran Python Script")
+	}
+	fmt.Println("Hello")
+
+	println(string(stdout))
+}
+
+func main(){
+	if len(os.Args) != 3{
+		fmt.Println("Incorrect input format")
+		fmt.Println("Need 2 parameters: ")
+		fmt.Println("\t threshold value")
+		fmt.Println("\t Input file")
+		os.Exit(1)
+	}
+	threshold,_ := strconv.ParseFloat(os.Args[1], 64)
+	dimensions := uint64(0)
+	
+	if os.Args[2] == "outputMatrixFullConcepts.txt" {
+		dimensions = 346
+	} else if os.Args[2] == "outputMatrixFull375.txt"{
+		dimensions = 374
+	} else{
+		fmt.Println("File does not exist")
+		os.Exit(1)
+	}
+	// dimensions,_ := strconv.ParseUint(os.Args[2], 10, 64)
+	runPython(threshold, dimensions, os.Args[2])
+}
